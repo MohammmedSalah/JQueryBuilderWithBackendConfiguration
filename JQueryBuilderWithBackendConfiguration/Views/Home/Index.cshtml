@@ -1,0 +1,137 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css" />
+
+
+<div class="container form-group">
+    <div class="row form-group">
+        <div class="col-md-8">
+            <div id="builder-students" class="query-builder form-inline" style="width:100%">
+            </div>
+
+            <button id="filter_students" class="btn btn-primary btn-sm btn-block">Filter Students</button>
+        </div>
+        <!-- filter results dashboard -->
+        <div class="col-lg-4">
+            <h4>Filtered Students</h4>
+            <ul id="builder-students-filter-results" class="list-group center"></ul>
+        </div>
+    </div>
+
+  
+</div>
+
+
+
+<script>
+
+    // #region query builder component config
+
+    function GetQueryBuilderFilterOptions() {
+        returnData = ""
+        $.ajax({
+            url: '/Home/GetStudentQueryBuilderSettings',//API to get required filters from backend
+            type: 'Get',
+            async: false,
+            cache: false,
+            timeout: 30000,
+            contentType: 'application/json; charset=utf-8',
+            success: function (data) {
+                if (data != null) {
+                    returnData = data.filters;
+                }
+                else {
+                    //AlertErrorMessage(data.Message)
+                }
+            },
+            error: function (xhr, status, error) {
+                //AlertErrorMessage()
+            }
+        });
+        return function () {
+            return returnData;
+        }();
+    }
+    
+    function StudentsQueryBuilderHandler()
+    {
+        var studentFilterSettings = GetQueryBuilderFilterOptions();
+        console.log(studentFilterSettings);
+        //studentFilterSettings[4].validation = { callback: Temp }
+        $('#builder-students').queryBuilder({
+
+            plugins: ['bt-tooltip-errors'],//you can also configure this plugins from backend
+            filters: studentFilterSettings
+
+        });
+
+        $('#filter_students').on('click', function () {
+            var result = $('#builder-students').queryBuilder('getRules');
+            console.log(result);
+            if (!$.isEmptyObject(result)) {
+                $.ajax({
+                    type: "POST",
+                    url: "/Home/FilterStudents",
+                    data: JSON.stringify(result),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    success: function (data) {
+                        if (data != null && data.Success) {
+                            SetFilteredStudents(data.Data)
+                        }
+                        else {
+                            //AlertErrorMessage(data.Message)
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        //AlertErrorMessage()
+                    }
+                });
+            }
+        });
+    }
+
+    // #endregion
+
+    // #region filter result component config
+
+    function SetFilteredStudents(Data) {
+        console.log(Data);
+        $('#builder-students-filter-results').empty();
+        $.each(Data, function (key, value) {
+            $("#builder-students-filter-results")
+                .append('<li data-id="' + value.Id +'" class="list-group-item py-1"> ' +
+                value.Name +
+                '<span class="pull-right button-group"> ' +
+                '<button onclick="RemoveStudent(\'' + value.Id + '\')" type="button" class="btn btn-danger btn-sm">Remove</button> ' +
+                '</span> ' +
+                '</li>')
+
+        });
+        
+    }
+
+    function RemoveStudent(id) {
+        $('#builder-students-filter-results li[data-id="' + id + '"]').remove();
+    }
+
+
+    // #endregion
+
+
+
+    $(document).ready(function () {
+
+        StudentsQueryBuilderHandler();
+
+    });
+
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
+
+
+
+
