@@ -1,4 +1,4 @@
-Jquery builder with backend configuration and client library for filtration process 
+Jquery builder with backend configuration and client library for filtration process using asp.net mvc
 using Dynamic Linq Query Builder library https://github.com/castle-it/dynamic-linq-query-builder.
 
 the filteration config generated from backend and also can be extended to include all coonfiguration needed for jquery builder.
